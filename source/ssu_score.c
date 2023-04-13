@@ -1,4 +1,5 @@
 //add header files
+#include "ssu_score.h"
 
 extern struct ssu_scoreTable score_table[QNUM];
 extern char id_table[SNUM][10];
@@ -12,7 +13,7 @@ char errorDir[BUFLEN];
 char threadFiles[ARGNUM][FILELEN];
 char iIDs[ARGNUM][FILELEN];
 
-int eOption = false;
+int eOption = false;//각 option이 입력되면 true로 바뀜
 int tOption = false;
 int mOption = false;
 int iOption = false;
@@ -30,17 +31,17 @@ void ssu_score(int argc, char *argv[])
 	}
 
 	memset(saved_path, 0, BUFLEN);
-	if(argc >= 3 && strcmp(argv[1], "-i") != 0){
+	if(argc >= 3 && strcmp(argv[1], "-i") != 0){//i는 사라진 옵션인듯?
 		strcpy(stuDir, argv[1]);
 		strcpy(ansDir, argv[2]);
 	}
 
-	if(!check_option(argc, argv))
+	if(!check_option(argc, argv))//정의되지 않은 옵션인 경우에는 프로그램 종료시킴
 		exit(1);
 
 	if(!mOption && !eOption && !tOption && iOption 
 			&& !strcmp(stuDir, "") && !strcmp(ansDir, "")){
-		do_iOption(iIDs);
+		do_iOption(iIDs);//뭔지 모르겠는데 아무것도 입력안하고 엔터쳤을때 실행되는듯?
 		return;
 	}
 
@@ -61,14 +62,14 @@ void ssu_score(int argc, char *argv[])
 
 	chdir(saved_path);
 
-	set_scoreTable(ansDir);
-	set_idTable(stuDir);
+	set_scoreTable(ansDir);//학생 점수를 엑셀 테이블에 넣는 거?
+	set_idTable(stuDir);//그러면 idtable을 set한다는건 뭐일까?
 
 	if(mOption)
-		do_mOption();
+		do_mOption();//배점수정 기능인듯
 
 	printf("grading student's test papers..\n");
-	score_students();
+	score_students();//아마 결과 출력 기능인듯?
 
 	if(iOption)
 		do_iOption(iIDs);
@@ -502,7 +503,7 @@ void score_students()
 		sprintf(tmp, "%s,", id_table[num]);
 		write(fd, tmp, strlen(tmp)); 
 
-		score += score_student(fd, id_table[num]);
+		score += score_student(fd, id_table[num]);//재귀 호출
 	}
 
 	printf("Total average : %.2f\n", score / num);
