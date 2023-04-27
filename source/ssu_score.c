@@ -1,10 +1,15 @@
 //add header files
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <dirent.h>
+#include <sys/stat.h>
 #include "ssu_score.h"
 
 extern struct ssu_scoreTable score_table[QNUM];
 extern char id_table[SNUM][10];
 
-struct ssu_scoreTable score_table[QNUM];
+struct ssu_scoreTable score_table[QNUM];//문제별 점수가 저장되어있는 구조체 배열
 char id_table[SNUM][10];
 
 char stuDir[BUFLEN];
@@ -24,16 +29,16 @@ void ssu_score(int argc, char *argv[])
 	int i;
 
 	for(i = 0; i < argc; i++){
-		if(!strcmp(argv[i], "-h")){
+		if(!strcmp(argv[i], "-h")){//-h옵션이 있다면 사용법을 출력하고 함수 종료
 			print_usage();
 			return;
 		}
 	}
 
 	memset(saved_path, 0, BUFLEN);
-	if(argc >= 3 && strcmp(argv[1], "-i") != 0){//i는 사라진 옵션인듯?
-		strcpy(stuDir, argv[1]);
-		strcpy(ansDir, argv[2]);
+	if(argc >= 3 && strcmp(argv[1], "-i") != 0){
+		strcpy(stuDir, argv[1]);//stuDir 경로 값 할당
+		strcpy(ansDir, argv[2]);//ansDir 경로 값 할당
 	}
 
 	if(!check_option(argc, argv))//정의되지 않은 옵션인 경우에는 프로그램 종료시킴
@@ -41,35 +46,35 @@ void ssu_score(int argc, char *argv[])
 
 	if(!mOption && !eOption && !tOption && iOption 
 			&& !strcmp(stuDir, "") && !strcmp(ansDir, "")){
-		do_iOption(iIDs);//뭔지 모르겠는데 아무것도 입력안하고 엔터쳤을때 실행되는듯?
+		do_iOption(iIDs);//i옵션 기능 실행
 		return;
 	}
 
-	getcwd(saved_path, BUFLEN);
+	getcwd(saved_path, BUFLEN);//현재 경로를 saved_path에 저장
 
 	if(chdir(stuDir) < 0){
-		fprintf(stderr, "%s doesn't exist\n", stuDir);
+		fprintf(stderr, "%s doesn't exist\n", stuDir);//stuDir이 존재하지 않을 경우 메시지 출력
 		return;
 	}
-	getcwd(stuDir, BUFLEN);
+	getcwd(stuDir, BUFLEN);//학생답안 디렉토리의 절대경로를 stuDir에 저장 
 
 	chdir(saved_path);
 	if(chdir(ansDir) < 0){
-		fprintf(stderr, "%s doesn't exist\n", ansDir);
+		fprintf(stderr, "%s doesn't exist\n", ansDir);//ansDir이 존재하지 않을 경우 메시지 출력
 		return;
 	}
-	getcwd(ansDir, BUFLEN);
+	getcwd(ansDir, BUFLEN);//정답 디렉토리의 절대경로를 stuDir에 저장
 
 	chdir(saved_path);
 
-	set_scoreTable(ansDir);//학생 점수를 엑셀 테이블에 넣는 거?
-	set_idTable(stuDir);//그러면 idtable을 set한다는건 뭐일까?
+	set_scoreTable(ansDir);//점수테이블을 설정함(문제별 배점이 기록되있음)
+	set_idTable(stuDir);//채점결과 테이블을 설정함
 
 	if(mOption)
 		do_mOption();//배점수정 기능인듯
 
 	printf("grading student's test papers..\n");
-	score_students();//아마 결과 출력 기능인듯?
+	score_students();//이게 메인 로직인듯
 
 	if(iOption)
 		do_iOption(iIDs);
@@ -83,41 +88,41 @@ int check_option(int argc, char *argv[])
 	int c;
 	int exist = 0;
 
-	while((c = getopt(argc, argv, "e:thmi")) != -1)
+	while((c = getopt(argc, argv, "e:thmi")) != -1)//e:thmi 외에도 ncpse 옵션들도 추가 해야될듯
 	{
 		switch(c){
-			case 'e':
+			case 'e'://에러메시지 출력 옵션
 				eOption = true;
-				strcpy(errorDir, optarg);
+				strcpy(errorDir, optarg);//errorDir에 입력받은 경로 저장
 
 				if(access(errorDir, F_OK) < 0)
 					mkdir(errorDir, 0755);
 				else{
-					rmdirs(errorDir);
+					rmdirs(errorDir);//디렉토리가 이미 존재한다면 지워줌
 					mkdir(errorDir, 0755);
 				}
 				break;
-			case 't':
+			case 't'://컴파일시 -lpthread옵션 추가하는 옵션
 				tOption = true;
-				i = optind;
+				i = optind;//getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
 				j = 0;
 
-				while(i < argc && argv[i][0] != '-'){
+				while(i < argc && argv[i][0] != '-'){//옵션을 제외하나 인자들 순회
 
-					if(j >= ARGNUM)
+					if(j >= ARGNUM)//인자 갯수 초과
 						printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
 					else{
-						strcpy(threadFiles[j], argv[i]);
+						strcpy(threadFiles[j], argv[i]);//옵션을 제외한 인자들을 순서대로 threadFiles배열에 저장
 					}
 					i++; 
 					j++;
 				}
 				break;
-			case 'm':
+			case 'm'://문제번호 배점 수정 옵션
 				mOption = true;
 				break;
 
-			case 'i':
+			case 'i'://이번 과제에서는 사라진 옵션임
 				iOption = true;
 				i = optind;
 				j = 0;
@@ -132,13 +137,13 @@ int check_option(int argc, char *argv[])
 				}
 				break;
 
-			case '?':
+			case '?'://이상한 옵션이 들어오거나 옵션 형식이 맞지 않는 경우
 				printf("Unkown option %c\n", optopt);
 				return false;
 		}
 	}
 
-	return true;
+	return true;//입력된 옵션들이 모두 유효하기 때문에 true 반환
 }
 
 void do_iOption(char (*ids)[FILELEN])
@@ -262,10 +267,10 @@ void set_scoreTable(char *ansDir)
 
 	// check exist
 	if(access(filename, F_OK) == 0)
-		read_scoreTable(filename);
+		read_scoreTable(filename);//scoreTable이 이미 존재한다면 그대로 읽어오기
 	else{
-		make_scoreTable(ansDir);
-		write_scoreTable(filename);
+		make_scoreTable(ansDir);//scoreTable만들기
+		write_scoreTable(filename);//scoreTable 내 데이터 작성하기
 	}
 }
 
@@ -281,7 +286,7 @@ void read_scoreTable(char *path)
 		return ;
 	}
 
-	while(fscanf(fp, "%[^,],%s\n", qname, score) != EOF){
+	while(fscanf(fp, "%[^,],%s\n", qname, score) != EOF){//,전 까지의 문자를 qname 이후 문자열은 score에 저장
 		strcpy(score_table[idx].qname, qname);
 		score_table[idx++].score = atof(score);
 	}
@@ -299,7 +304,7 @@ void make_scoreTable(char *ansDir)
 	int idx = 0;
 	int i;
 
-	num = get_create_type();
+	num = get_create_type();//score table의 문제별 점수를 어떻게 부여할건지 사용자의 입력을 받아서 정함
 
 	if(num == 1)
 	{
@@ -314,21 +319,21 @@ void make_scoreTable(char *ansDir)
 		return;
 	}
 
-	while((dirp = readdir(dp)) != NULL){
+	while((dirp = readdir(dp)) != NULL){//ansDir 내부 파일 순회
 
 		if(!strcmp(dirp->d_name, ".") || !strcmp(dirp->d_name, ".."))
 			continue;
 
-		if((type = get_file_type(dirp->d_name)) < 0)
+		if((type = get_file_type(dirp->d_name)) < 0)//.txt나 .c파일 이아니면 무시
 			continue;
 
-		strcpy(score_table[idx].qname, dirp->d_name);
+		strcpy(score_table[idx].qname, dirp->d_name);//.txt 파일, .c파일들의 이름을 score_table[idx].qname에 저장
 
 		idx++;
 	}
 
 	closedir(dp);
-	sort_scoreTable(idx);
+	sort_scoreTable(idx);//문제번호 순서대로 scoreTable 정렬
 
 	for(i = 0; i < idx; i++)
 	{
@@ -365,7 +370,7 @@ void write_scoreTable(char *filename)
 
 	for(i = 0; i < num; i++)
 	{
-		if(score_table[i].score == 0)
+		if(score_table[i].score == 0)//score_table[i].score의 값을 설정하지 않았다면 기본값이 0그대로이므로 이 인덱스부터는 점수가 등록되지 않았으므로 루프 중단
 			break;
 
 		sprintf(tmp, "%s,%.2f\n", score_table[i].qname, score_table[i].score);
@@ -397,7 +402,7 @@ void set_idTable(char *stuDir)
 		stat(tmp, &statbuf);
 
 		if(S_ISDIR(statbuf.st_mode))
-			strcpy(id_table[num++], dirp->d_name);
+			strcpy(id_table[num++], dirp->d_name);//학생의 학번을 id_table에 저장
 		else
 			continue;
 	}
@@ -413,7 +418,7 @@ void sort_idTable(int size)
 
 	for(i = 0; i < size - 1; i++){
 		for(j = 0; j < size - 1 -i; j++){
-			if(strcmp(id_table[j], id_table[j+1]) > 0){
+			if(strcmp(id_table[j], id_table[j+1]) > 0){//id_table을 학번을 기준으로 오름차순 정렬
 				strcpy(tmp, id_table[j]);
 				strcpy(id_table[j], id_table[j+1]);
 				strcpy(id_table[j+1], tmp);
@@ -432,10 +437,10 @@ void sort_scoreTable(int size)
 	for(i = 0; i < size - 1; i++){
 		for(j = 0; j < size - 1 - i; j++){
 
-			get_qname_number(score_table[j].qname, &num1_1, &num1_2);
-			get_qname_number(score_table[j+1].qname, &num2_1, &num2_2);
+			get_qname_number(score_table[j].qname, &num1_1, &num1_2);//문제 번호를 가져옴
+			get_qname_number(score_table[j+1].qname, &num2_1, &num2_2);//문제 번호를 가져옴
 
-			if((num1_1 > num2_1) || ((num1_1 == num2_1) && (num1_2 > num2_2))){
+			if((num1_1 > num2_1) || ((num1_1 == num2_1) && (num1_2 > num2_2))){//문제 번호의 오름차순으로 scoretable을 정렬
 
 				memcpy(&tmp, &score_table[j], sizeof(score_table[0]));
 				memcpy(&score_table[j], &score_table[j+1], sizeof(score_table[0]));
@@ -457,7 +462,7 @@ void get_qname_number(char *qname, int *num1, int *num2)
 	if(p == NULL)
 		*num2 = 0;
 	else
-		*num2 = atoi(p);
+		*num2 = atoi(p);//번호의 서브 문제가 있을경우 num2에 저장 시킴
 }
 
 int get_create_type()
@@ -963,7 +968,7 @@ void redirection(char *command, int new, int old)
 
 int get_file_type(char *filename)
 {
-	char *extension = strrchr(filename, '.');
+	char *extension = strrchr(filename, '.');//.을 기준으로 오른쪽에있는 문자열만 가져오는듯
 
 	if(!strcmp(extension, ".txt"))
 		return TEXTFILE;

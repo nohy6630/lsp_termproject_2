@@ -36,8 +36,8 @@
 #define ARGNUM 5
 
 struct ssu_scoreTable{
-	char qname[FILELEN];
-	double score;
+	char qname[FILELEN];//문제의 정답파일 이름
+	double score;//문제의 점수
 };
 
 void ssu_score(int argc, char *argv[]);
