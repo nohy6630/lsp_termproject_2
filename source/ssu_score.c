@@ -638,18 +638,18 @@ int score_blank(char *id, char *filename)
 
 	strcpy(s_answer, ltrim(rtrim(s_answer)));//양옆 공백 제거
 
-	if(s_answer[strlen(s_answer) - 1] == ';'){
+	if(s_answer[strlen(s_answer) - 1] == ';'){//세미콜론이 있을경우 지우기
 		has_semicolon = true;
 		s_answer[strlen(s_answer) - 1] = '\0';
 	}
 
-	if(!make_tokens(s_answer, tokens)){
+	if(!make_tokens(s_answer, tokens)){//토큰들로 분리
 		close(fd_std);
 		return false;
 	}
 
 	idx = 0;
-	std_root = make_tree(std_root, tokens, &idx, 0);
+	std_root = make_tree(std_root, tokens, &idx, 0);//토큰들로 트리를 만듬
 
 	sprintf(tmp, "%s/%s", ansDir, filename);
 	fd_ans = open(tmp, O_RDONLY);
@@ -682,15 +682,15 @@ int score_blank(char *id, char *filename)
 				a_answer[strlen(a_answer) - 1] = '\0';
 		}
 
-		if(!make_tokens(a_answer, tokens))
+		if(!make_tokens(a_answer, tokens))//정답문자열을 토큰화
 			continue;
 
 		idx = 0;
-		ans_root = make_tree(ans_root, tokens, &idx, 0);
+		ans_root = make_tree(ans_root, tokens, &idx, 0);//토큰들로 트리를 만듬
 
 		compare_tree(std_root, ans_root, &result);
 
-		if(result == true){
+		if(result == true){//정답일 경우 메모리 정리해주고 true return
 			close(fd_std);
 			close(fd_ans);
 
@@ -711,7 +711,7 @@ int score_blank(char *id, char *filename)
 	if(ans_root != NULL)
 		free_node(ans_root);
 
-	return false;
+	return false;//오답일 경우 false return
 }
 
 double score_program(char *id, char *filename)
@@ -719,9 +719,9 @@ double score_program(char *id, char *filename)
 	double compile;
 	int result;
 
-	compile = compile_program(id, filename);
+	compile = compile_program(id, filename);//컴파일시 에러가 있을경우 compile은 0, warning이 있을경우 그에 비례하여 음수로 나타남.
 
-	if(compile == ERROR || compile == false)
+	if(compile == ERROR || compile == false)//컴파일 에러시 오답 처리
 		return false;
 	
 	result = execute_program(id, filename);
@@ -758,9 +758,9 @@ double compile_program(char *id, char *filename)
 	double result;
 
 	memset(qname, 0, sizeof(qname));
-	memcpy(qname, filename, strlen(filename) - strlen(strrchr(filename, '.')));
+	memcpy(qname, filename, strlen(filename) - strlen(strrchr(filename, '.')));//filename에서 확장자명을 지워 qname에 저장
 	
-	isthread = is_thread(qname);
+	isthread = is_thread(qname);//-t옵션을 적용할 파일인지 체크하는 함수
 
 	sprintf(tmp_f, "%s/%s", ansDir, filename);
 	sprintf(tmp_e, "%s/%s.exe", ansDir, qname);
@@ -773,12 +773,12 @@ double compile_program(char *id, char *filename)
 	sprintf(tmp_e, "%s/%s_error.txt", ansDir, qname);
 	fd = creat(tmp_e, 0666);
 
-	redirection(command, fd, STDERR);
+	redirection(command, fd, STDERR);//표준에러 디스크립터를 fd로 임시로 바꿔서 gcc명령여를 실행함. 즉 에러코드가 fd와 연결된 tmp_e파일에 들어가게 됨.
 	size = lseek(fd, 0, SEEK_END);
 	close(fd);
 	unlink(tmp_e);
 
-	if(size > 0)
+	if(size > 0)//오류 메시지가 있을경우 false return
 		return false;
 
 	sprintf(tmp_f, "%s/%s/%s", stuDir, id, filename);
@@ -796,8 +796,8 @@ double compile_program(char *id, char *filename)
 	size = lseek(fd, 0, SEEK_END);
 	close(fd);
 
-	if(size > 0){
-		if(eOption)
+	if(size > 0){//오류 메시지 있을경우 
+		if(eOption)//e옵션이 있을경우 디렉토리를 만들어 그안에 에러메시지가 담겨있는 파일을 저장함
 		{
 			sprintf(tmp_e, "%s/%s", errorDir, id);
 			if(access(tmp_e, F_OK) < 0)
@@ -809,8 +809,8 @@ double compile_program(char *id, char *filename)
 			result = check_error_warning(tmp_e);
 		}
 		else{ 
-			result = check_error_warning(tmp_f);
-			unlink(tmp_f);
+			result = check_error_warning(tmp_f);//warning만큼 감점을 함 또는 error가 있을경우 그냥 0
+			unlink(tmp_f);//e옵션 없으므로 에러메시지 파일 지움
 		}
 
 		return result;
@@ -857,7 +857,7 @@ int execute_program(char *id, char *filename)
 	fd = creat(ans_fname, 0666);
 
 	sprintf(tmp, "%s/%s.exe", ansDir, qname);
-	redirection(tmp, fd, STDOUT);
+	redirection(tmp, fd, STDOUT);//tmp를 실행하고 표준출력을 stdout파일에 하도록 지정
 	close(fd);
 
 	sprintf(std_fname, "%s/%s/%s.stdout", stuDir, id, qname);
@@ -866,7 +866,7 @@ int execute_program(char *id, char *filename)
 	sprintf(tmp, "%s/%s/%s.stdexe &", stuDir, id, qname);
 
 	start = time(NULL);
-	redirection(tmp, fd, STDOUT);
+	redirection(tmp, fd, STDOUT);//tmp를 실행하고 표준출력을 stdout파일에 하도록 지정
 	
 	sprintf(tmp, "%s.stdexe", qname);
 	while((pid = inBackground(tmp)) > 0){

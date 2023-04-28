@@ -1,6 +1,18 @@
 {
     "files.associations": {
         "ssu_score.h": "c",
-        "cstring": "c"
+        "cstring": "c",
+        "__config": "c",
+        "bitset": "c",
+        "chrono": "c",
+        "complex": "c",
+        "optional": "c",
+        "string_view": "c",
+        "system_error": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "__string": "c",
+        "memory": "c",
+        "utility": "c"
     }
 }

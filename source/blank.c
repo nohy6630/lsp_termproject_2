@@ -171,11 +171,11 @@ int make_tokens(char *str, char tokens[TOKEN_CNT][MINLEN])
 	int lcount, rcount;
 	int p_str;
 	
-	clear_tokens(tokens);
+	clear_tokens(tokens);//2차원배열을 0으로 초기화
 
 	start = str;
 	
-	if(is_typeStatement(str) == 0) 
+	if(is_typeStatement(str) == 0)//gcc나 데이터타입 형식이 맞지 않게 들어가있는경우 false 리턴
 		return false;	
 	
 	while(1)
@@ -1046,7 +1046,7 @@ int is_typeStatement(char *str)
 	
 	start = str;
 	strncpy(str2,str,strlen(str));
-	remove_space(str2);
+	remove_space(str2);//공백 지우기
 
 	while(start[0] == ' ')
 		start += 1;
@@ -1055,9 +1055,9 @@ int is_typeStatement(char *str)
 	{
 		strncpy(tmp2, start, strlen("gcc"));
 		if(strcmp(tmp2,"gcc") != 0)
-			return 0;
+			return 0;//gcc가 포함은 되는데 gcc로 시작하지 않을경우 0 리턴
 		else
-			return 2;
+			return 2;//gcc로 시작할경우 2 리턴
 	}
 	
 	for(i = 0; i < DATATYPE_SIZE; i++)
@@ -1069,13 +1069,13 @@ int is_typeStatement(char *str)
 			
 			if(strcmp(tmp, datatype[i]) == 0)
 				if(strcmp(tmp, tmp2) != 0)
-					return 0;  
+					return 0;//데이터타입으로 시작하긴하는데 공백이 잘못들어간경우? 0 리턴
 				else
-					return 2;
+					return 2;//데이터타입으로 시작할경우 2 리턴
 		}
 
 	}
-	return 1;
+	return 1;//문자열에 gcc도 없고 데이터타입으로 시작하지도 않을 경우 1 리턴
 
 }
 
