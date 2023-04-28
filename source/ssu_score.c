@@ -4,7 +4,9 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include "ssu_score.h"
+#include "blank.h"
 
 extern struct ssu_scoreTable score_table[QNUM];
 extern char id_table[SNUM][10];
@@ -508,7 +510,7 @@ void score_students()
 		sprintf(tmp, "%s,", id_table[num]);
 		write(fd, tmp, strlen(tmp)); 
 
-		score += score_student(fd, id_table[num]);//재귀 호출
+		score += score_student(fd, id_table[num]);
 	}
 
 	printf("Total average : %.2f\n", score / num);
@@ -527,10 +529,10 @@ double score_student(int fd, char *id)
 
 	for(i = 0; i < size ; i++)
 	{
-		if(score_table[i].score == 0)
+		if(score_table[i].score == 0)//score_table 데이터 모두 읽음
 			break;
 
-		sprintf(tmp, "%s/%s/%s", stuDir, id, score_table[i].qname);
+		sprintf(tmp, "%s/%s/%s", stuDir, id, score_table[i].qname);//stuDir/학번/답안파일이름
 
 		if(access(tmp, F_OK) < 0)
 			result = false;
@@ -540,9 +542,9 @@ double score_student(int fd, char *id)
 				continue;
 			
 			if(type == TEXTFILE)
-				result = score_blank(id, score_table[i].qname);
+				result = score_blank(id, score_table[i].qname);//텍스트파일이면 빈칸채우기문제 로직
 			else if(type == CFILE)
-				result = score_program(id, score_table[i].qname);
+				result = score_program(id, score_table[i].qname);//c파일이면 소스코드문제 로직
 		}
 
 		if(result == false)
@@ -553,7 +555,7 @@ double score_student(int fd, char *id)
 				sprintf(tmp, "%.2f,", score_table[i].score);
 			}
 			else if(result < 0){
-				score = score + score_table[i].score + result;
+				score = score + score_table[i].score + result;//result는 감점 점수인듯?
 				sprintf(tmp, "%.2f,", score_table[i].score + result);
 			}
 			write(fd, tmp, strlen(tmp));
@@ -562,7 +564,7 @@ double score_student(int fd, char *id)
 
 	printf("%s is finished. score : %.2f\n", id, score); 
 
-	sprintf(tmp, "%.2f\n", score);
+	sprintf(tmp, "%.2f\n", score);//다음 행으로 전환
 	write(fd, tmp, strlen(tmp));
 
 	return score;
@@ -594,7 +596,7 @@ char *get_answer(int fd, char *result)
 	memset(result, 0, BUFLEN);
 	while(read(fd, &c, 1) > 0)
 	{
-		if(c == ':')
+		if(c == ':')//: 이후 부터는 또 다른 정답이므로 여기서 break
 			break;
 		
 		result[idx++] = c;
@@ -618,23 +620,23 @@ int score_blank(char *id, char *filename)
 	int has_semicolon = false;
 
 	memset(qname, 0, sizeof(qname));
-	memcpy(qname, filename, strlen(filename) - strlen(strrchr(filename, '.')));
+	memcpy(qname, filename, strlen(filename) - strlen(strrchr(filename, '.')));//확장자를 제외하고 문제파일이름을 qname에 복사
 
 	sprintf(tmp, "%s/%s/%s", stuDir, id, filename);
 	fd_std = open(tmp, O_RDONLY);
-	strcpy(s_answer, get_answer(fd_std, s_answer));
+	strcpy(s_answer, get_answer(fd_std, s_answer));//학생의 답안을 s_answer의 저장
 
-	if(!strcmp(s_answer, "")){
+	if(!strcmp(s_answer, "")){//답안이 비어있다면 오답처리
 		close(fd_std);
 		return false;
 	}
 
-	if(!check_brackets(s_answer)){
+	if(!check_brackets(s_answer)){//괄호 형식이 유효하지 않다면 오답처리
 		close(fd_std);
 		return false;
 	}
 
-	strcpy(s_answer, ltrim(rtrim(s_answer)));
+	strcpy(s_answer, ltrim(rtrim(s_answer)));//양옆 공백 제거
 
 	if(s_answer[strlen(s_answer) - 1] == ';'){
 		has_semicolon = true;

@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "ssu_score.h": "c"
+        "ssu_score.h": "c",
+        "cstring": "c"
     }
 }
