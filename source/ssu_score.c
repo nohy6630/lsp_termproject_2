@@ -5,6 +5,9 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <string.h>
+#include <time.h>
+#include <signal.h>
 #include "ssu_score.h"
 #include "blank.h"
 
@@ -881,7 +884,7 @@ int execute_program(char *id, char *filename)
 
 	close(fd);
 
-	return compare_resultfile(std_fname, ans_fname);
+	return compare_resultfile(std_fname, ans_fname);//실행결과가 저장된 파일끼리 비교
 }
 
 pid_t inBackground(char *name)
@@ -926,7 +929,7 @@ int compare_resultfile(char *file1, char *file2)
 	while(1)
 	{
 		while((len1 = read(fd1, &c1, 1)) > 0){
-			if(c1 == ' ') 
+			if(c1 == ' ')//공백일 경우 건너뛰기
 				continue;
 			else 
 				break;
@@ -941,7 +944,7 @@ int compare_resultfile(char *file1, char *file2)
 		if(len1 == 0 && len2 == 0)
 			break;
 
-		to_lower_case(&c1);
+		to_lower_case(&c1);//전부 소문자로 바꾸기
 		to_lower_case(&c2);
 
 		if(c1 != c2){

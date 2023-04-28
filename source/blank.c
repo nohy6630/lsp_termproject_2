@@ -943,7 +943,7 @@ node *get_high_precedence_node(node *cur, node *new)
 		}
 
 
-		if(cur->parent != NULL)
+		if(cur->parent != NULL)//여기 분기는 절대 실행 될수가 없지않나?
 			return get_high_precedence_node(cur->parent, new);
 	}
 
@@ -1068,10 +1068,12 @@ int is_typeStatement(char *str)
 			strncpy(tmp2, start, strlen(datatype[i]));
 			
 			if(strcmp(tmp, datatype[i]) == 0)
+			{
 				if(strcmp(tmp, tmp2) != 0)
 					return 0;//데이터타입으로 시작하긴하는데 공백이 잘못들어간경우? 0 리턴
 				else
 					return 2;//데이터타입으로 시작할경우 2 리턴
+			}
 		}
 
 	}
