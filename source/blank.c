@@ -583,8 +583,14 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 	int fstart;
 	int i;
 
+
 	while(1)	
 	{
+		if(cur==NULL)
+		printf("idx: %d    tokens[*idx]: %s    cur: NULL\n",*idx,tokens[*idx]);
+		else
+		printf("idx: %d    tokens[*idx]: %s    cur: %s\n",*idx,tokens[*idx],cur->name);
+
 		if(strcmp(tokens[*idx], "") == 0)
 			break;
 	
@@ -592,12 +598,12 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 			return get_root(cur);
 
 		else if(!strcmp(tokens[*idx], ","))
-			return get_root(cur);
+			return get_root(cur);//?
 
 		else if(!strcmp(tokens[*idx], "("))
 		{
-			// function()
-			if(*idx > 0 && !is_operator(tokens[*idx - 1]) && strcmp(tokens[*idx - 1], ",") != 0){
+			if(*idx > 0 && !is_operator(tokens[*idx - 1]) && strcmp(tokens[*idx - 1], ",") != 0)//함수형식일경우
+			{
 				fstart = true;
 
 				while(1)
@@ -609,8 +615,9 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 					
 					new = make_tree(NULL, tokens, idx, parentheses + 1);
 					
-					if(new != NULL){
-						if(fstart == true){
+					if(new != NULL)
+					{
+						if(fstart == true){//함수의 인자라면?
 							cur->child_head = new;
 							new->parent = cur;
 	
@@ -712,13 +719,17 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 					|| !strcmp(tokens[*idx], "|") || !strcmp(tokens[*idx], "&") 
 					|| !strcmp(tokens[*idx], "+") || !strcmp(tokens[*idx], "*"))
 			{
+				printf("1\n");
 				if(is_operator(cur->name) == true && !strcmp(cur->name, tokens[*idx]))
 					operator = cur;
 		
 				else
 				{
 					new = create_node(tokens[*idx], parentheses);
-					operator = get_most_high_precedence_node(cur, new);
+				printf("2\n");
+
+					operator = get_most_high_precedence_node(cur, new);//여기서 segmentation fault발생
+				printf("3\n");
 
 					if(operator->parent == NULL && operator->prev == NULL){
 
@@ -761,7 +772,6 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 					else
 						cur = insert_node(operator, new);
 				}
-
 			}
 			else
 			{
@@ -800,7 +810,6 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 		else 
 		{
 			new = create_node(tokens[*idx], parentheses);
-
 			if(cur == NULL)
 				cur = new;
 
@@ -812,7 +821,7 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 			}
 			else{
 
-				cur = get_last_child(cur);
+				cur = get_last_child(cur);//자식리스트의 마지막 원소를 가져옴
 
 				cur->next = new;
 				new->prev = cur;

@@ -627,7 +627,9 @@ int score_blank(char *id, char *filename)
 
 	sprintf(tmp, "%s/%s/%s", stuDir, id, filename);
 	fd_std = open(tmp, O_RDONLY);
-	strcpy(s_answer, get_answer(fd_std, s_answer));//학생의 답안을 s_answer의 저장
+	printf("fd_std's filename: %s\n", tmp);
+	//strcpy(s_answer, get_answer(fd_std, s_answer));  //get_answer가 s_answer을 이미 가르키고 있음
+	get_answer(fd_std, s_answer);//학생의 답안을 s_answer의 저장
 
 	if(!strcmp(s_answer, "")){//답안이 비어있다면 오답처리
 		close(fd_std);
@@ -650,6 +652,11 @@ int score_blank(char *id, char *filename)
 		close(fd_std);
 		return false;
 	}
+	printf("tokens\n");
+	for(int i=0;i<TOKEN_CNT;i++)
+	{
+		printf("tokens[%d] : %s\n",i,tokens[i]);
+	}
 
 	idx = 0;
 	std_root = make_tree(std_root, tokens, &idx, 0);//토큰들로 트리를 만듬
@@ -665,12 +672,14 @@ int score_blank(char *id, char *filename)
 		for(idx = 0; idx < TOKEN_CNT; idx++)
 			memset(tokens[idx], 0, sizeof(tokens[idx]));
 
-		strcpy(a_answer, get_answer(fd_ans, a_answer));
+		//strcpy(a_answer, get_answer(fd_ans, a_answer));
+		get_answer(fd_ans, a_answer);
 
 		if(!strcmp(a_answer, ""))
 			break;
 
-		strcpy(a_answer, ltrim(rtrim(a_answer)));
+		//strcpy(a_answer, ltrim(rtrim(a_answer)));
+		ltrim(rtrim(a_answer));
 
 		if(has_semicolon == false){
 			if(a_answer[strlen(a_answer) -1] == ';')

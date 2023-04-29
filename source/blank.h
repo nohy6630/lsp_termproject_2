@@ -16,7 +16,7 @@
 #define MINLEN 64
 #define TOKEN_CNT 50
 
-typedef struct node{
+typedef struct node{//링크드리스트들이 트리형식으로 저장되게 만듬
 	int parentheses;
 	char *name;
 	struct node *parent;
