@@ -601,11 +601,6 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 
 	while (1)
 	{
-		if (cur == NULL)
-			printf("idx: %d    tokens[*idx]: %s    cur: NULL\n", *idx, tokens[*idx]);
-		else
-			printf("idx: %d    tokens[*idx]: %s    cur: %s\n", *idx, tokens[*idx], cur->name);
-
 		if (strcmp(tokens[*idx], "") == 0)
 			break;
 
@@ -738,17 +733,14 @@ node *make_tree(node *root, char (*tokens)[MINLEN], int *idx, int parentheses)
 		{
 			if (!strcmp(tokens[*idx], "||") || !strcmp(tokens[*idx], "&&") || !strcmp(tokens[*idx], "|") || !strcmp(tokens[*idx], "&") || !strcmp(tokens[*idx], "+") || !strcmp(tokens[*idx], "*"))
 			{
-				printf("1\n");
 				if (is_operator(cur->name) == true && !strcmp(cur->name, tokens[*idx]))
 					operator= cur;
 
 				else
 				{
 					new = create_node(tokens[*idx], parentheses);
-					printf("2\n");
 
-					operator= get_most_high_precedence_node(cur, new); // 여기서 segmentation fault발생
-					printf("3\n");
+					operator= get_most_high_precedence_node(cur, new);
 
 					if (operator->parent == NULL && operator->prev == NULL)
 					{
