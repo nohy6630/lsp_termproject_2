@@ -21,12 +21,15 @@ char stuDir[BUFLEN];
 char ansDir[BUFLEN];
 char errorDir[BUFLEN];
 char threadFiles[ARGNUM][FILELEN];
+char printStudents[ARGNUM][FILELEN];
 char iIDs[ARGNUM][FILELEN];
 
 int eOption = false; // 각 option이 입력되면 true로 바뀜
 int tOption = false;
 int mOption = false;
 int iOption = false;
+int cOption = false;
+int pOption = false;
 
 char scoreFile[BUFLEN] = "score.csv";
 
@@ -105,24 +108,77 @@ int check_option(int argc, char *argv[])
 	int i, j, k;
 	int c;
 	int exist = 0;
-	FILE *fp;
-	char qname[BUFLEN], score[BUFLEN];
-	int idx=0;
-	char mq[BUFLEN];
+	char tmp[BUFLEN];
 
-	while ((c = getopt(argc, argv, "e:thmin:")) != -1) // 옵션 처리
+	while ((c = getopt(argc, argv, "e:thmin:cp")) != -1) // 옵션 처리
 	{
 		switch (c)
 		{
+		case 'p':
+			pOption = true;
+			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
+			j = 0;
+
+			while (i < argc && argv[i][0] != '-')
+			{// 옵션을 제외한 인자들 순회, 다른 옵션을 만나면 반복 중지
+
+				if (j >= ARGNUM) // 인자 갯수 초과
+					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
+				else
+				{
+					sprintf(tmp, "%s/%s", stuDir, argv[i]);
+					if (access(tmp, F_OK) != 0)
+					{
+						fprintf(stderr, "error: %s student is not exist\n", argv[i]);
+						exit(1);
+					}
+					if(printStudents[j][0]!=0)
+					{
+						fprintf(stderr, "error: too many variable argument groups\n");
+						exit(1);
+					}
+					strcpy(printStudents[j], argv[i]);
+				}
+				i++;
+				j++;
+			}
+			break;
+		case 'c':
+			cOption = true;
+			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
+			j = 0;
+
+			while (i < argc && argv[i][0] != '-')
+			{					 // 옵션을 제외한 인자들 순회, 다른 옵션을 만나면 반복 중지
+				if (j >= ARGNUM) // 인자 갯수 초과
+					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
+				else
+				{
+					sprintf(tmp, "%s/%s", stuDir, argv[i]);
+					if (access(tmp, F_OK) != 0)
+					{
+						fprintf(stderr, "error: %s student is not exist\n", argv[i]);
+						exit(1);
+					}
+					if(printStudents[j][0]!=0)
+					{
+						fprintf(stderr, "error: too many variable argument groups\n");
+						exit(1);
+					}
+					strcpy(printStudents[j], argv[i]);
+				}
+				i++;
+				j++;
+			}
+			break;
 		case 'm':
 			mOption = true;
 			break;
 		case 'n':
 			realpath(optarg, scoreFile);
-			printf("%s\n", scoreFile);
 			if (strrchr(scoreFile, '.') == NULL || strcmp(strrchr(scoreFile, '.'), ".csv"))
 			{
-				fprintf(stderr, "error: score file is not csv\n");
+				fprintf(stderr, "error: score file path is invalid\n");
 				exit(1);
 			}
 			break;
@@ -138,13 +194,14 @@ int check_option(int argc, char *argv[])
 				mkdir(errorDir, 0755);
 			}
 			break;
+
 		case 't': // 컴파일시 -lpthread옵션 추가하는 옵션
 			tOption = true;
 			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
-			{ // 옵션을 제외하나 인자들 순회
+			{ // 옵션을 제외한 인자들 순회
 
 				if (j >= ARGNUM) // 인자 갯수 초과
 					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
@@ -247,7 +304,7 @@ void do_iOption(char (*ids)[FILELEN])
 	fclose(fp);
 }
 
-void do_mOption(char *ansDir)
+void do_mOption()
 {
 	double newScore;
 	char modiName[FILELEN];
@@ -283,7 +340,7 @@ void do_mOption(char *ansDir)
 	}
 
 	sprintf(filename, "./%s", "score_table.csv");
-	write_scoreTable(filename);
+	write_scoreTable(filename); // 바뀐 점수를 csv파일에 다시 갱신하는 함수 호출
 	free(ptr);
 }
 
@@ -580,8 +637,9 @@ double score_student(int fd, char *id)
 	double result;
 	double score = 0;
 	int i;
-	char tmp[BUFLEN];
+	char tmp[BUFLEN],tmp2[BUFLEN];
 	int size = sizeof(score_table) / sizeof(score_table[0]);
+	wrongProblem *head = NULL;
 
 	for (i = 0; i < size; i++)
 	{
@@ -603,6 +661,13 @@ double score_student(int fd, char *id)
 				result = score_program(id, score_table[i].qname); // c파일이면 소스코드문제 로직
 		}
 
+		if (result !=true)
+		{
+			memset(tmp2,0,sizeof(tmp2));
+			memcpy(tmp2, score_table[i].qname, strlen(score_table[i].qname) - strlen(strrchr(score_table[i].qname, '.')));
+			push_list(&head, tmp2, score_table[i].score);
+		}
+
 		if (result == false)
 			write(fd, "0,", 2);
 		else
@@ -621,7 +686,47 @@ double score_student(int fd, char *id)
 		}
 	}
 
-	printf("%s is finished. score : %.2f\n", id, score);
+	printf("%s is finished..", id);
+	if (printStudents[0][0] == 0)
+	{
+		if (cOption && pOption)
+		{
+			printf(" score : %.2f, wrong problem : ", score);
+			print_list(head);
+		}
+		else if (cOption)
+			printf(" score : %.2f", score);
+		else if (pOption)
+		{
+			printf(" wrong problem : ");
+			print_list(head);
+		}
+	}
+	else
+	{
+		for (int i = 0; i < ARGNUM; i++)
+		{
+			if (printStudents[i][0] == 0)
+				break;
+			if (!strcmp(id, printStudents[i]))
+			{
+				if (cOption && pOption)
+				{
+					printf(" score : %.2f, wrong problem : ", score);
+					print_list(head);
+				}
+				else if (cOption)
+					printf(" score : %.2f", score);
+				else if (pOption)
+				{
+					printf(" wrong problem : ");
+					print_list(head);
+				}
+			}
+		}
+	}
+	free_list(head);
+	printf("\n");
 
 	sprintf(tmp, "%.2f\n", score); // 다음 행으로 전환
 	write(fd, tmp, strlen(tmp));
@@ -684,7 +789,6 @@ int score_blank(char *id, char *filename)
 
 	sprintf(tmp, "%s/%s/%s", stuDir, id, filename);
 	fd_std = open(tmp, O_RDONLY);
-	printf("fd_std's filename: %s\n", tmp);
 	strcpy(s_answer, get_answer(fd_std, s_answer));
 
 	if (!strcmp(s_answer, ""))
@@ -1102,4 +1206,43 @@ void print_usage()
 	printf(" -t <QNAMES>       compile QNAME.C with -lpthread option\n");
 	printf(" -t <IDS>          print ID's wrong questions\n");
 	printf(" -h                print usage\n");
+}
+
+void push_list(wrongProblem **list, char *qname, double score)
+{
+	wrongProblem *new = malloc(sizeof(wrongProblem));
+	strcpy(new->qname, qname);
+	new->score = score;
+	new->next = NULL;
+	if(*list==NULL)
+		*list=new;
+	else
+	{
+		wrongProblem *node=*list;
+		while(node->next!=NULL)
+			node=node->next;
+		node->next=new;
+	}
+}
+
+void print_list(wrongProblem *head)
+{
+	if(head==NULL)
+		printf("head is null");
+	while (head != NULL)
+	{
+		printf("%s(%g)", head->qname, head->score);
+		if (head->next != NULL)
+			printf(", ");
+		head = head->next;
+	}
+}
+
+void free_list(wrongProblem *head)
+{
+	if (head == NULL)
+		return;
+	if (head->next != NULL)
+		free_list(head->next);
+	free(head);
 }

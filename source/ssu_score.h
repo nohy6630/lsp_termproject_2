@@ -40,6 +40,12 @@ struct ssu_scoreTable{
 	double score;//문제의 점수
 };
 
+typedef struct wrongProblem{
+	struct wrongProblem* next;
+	char qname[FILELEN];
+	double score;
+}wrongProblem;
+
 void ssu_score(int argc, char *argv[]);
 int check_option(int argc, char *argv[]);
 void print_usage();
@@ -77,5 +83,9 @@ int get_create_type();
 void sort_idTable(int size);
 void sort_scoreTable(int size);
 void get_qname_number(char *qname, int *num1, int *num2);
+
+void push_list(wrongProblem **list, char *qname, double score);
+void print_list(wrongProblem* head);
+void free_list(wrongProblem* head);
 
 #endif
