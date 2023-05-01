@@ -31,7 +31,7 @@ int iOption = false;
 int cOption = false;
 int pOption = false;
 
-char scoreFile[BUFLEN] = "score.csv";
+char scoreFile[BUFLEN];
 
 void ssu_score(int argc, char *argv[])
 {
@@ -58,6 +58,7 @@ void ssu_score(int argc, char *argv[])
 	{
 		strcpy(stuDir, argv[1]); // stuDir 경로 값 할당
 		strcpy(ansDir, argv[2]); // ansDir 경로 값 할당
+		sprintf(scoreFile,"%s/score.csv",ansDir);
 	}
 
 	if (!check_option(argc, argv)) // 정의되지 않은 옵션인 경우에는 프로그램 종료시킴
@@ -120,7 +121,7 @@ int check_option(int argc, char *argv[])
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
-			{// 옵션을 제외한 인자들 순회, 다른 옵션을 만나면 반복 중지
+			{ // 옵션을 제외한 인자들 순회, 다른 옵션을 만나면 반복 중지
 
 				if (j >= ARGNUM) // 인자 갯수 초과
 					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
@@ -132,7 +133,7 @@ int check_option(int argc, char *argv[])
 						fprintf(stderr, "error: %s student is not exist\n", argv[i]);
 						exit(1);
 					}
-					if(printStudents[j][0]!=0)
+					if (printStudents[j][0] != 0)
 					{
 						fprintf(stderr, "error: too many variable argument groups\n");
 						exit(1);
@@ -160,7 +161,7 @@ int check_option(int argc, char *argv[])
 						fprintf(stderr, "error: %s student is not exist\n", argv[i]);
 						exit(1);
 					}
-					if(printStudents[j][0]!=0)
+					if (printStudents[j][0] != 0)
 					{
 						fprintf(stderr, "error: too many variable argument groups\n");
 						exit(1);
@@ -187,11 +188,21 @@ int check_option(int argc, char *argv[])
 			strcpy(errorDir, optarg); // errorDir에 입력받은 경로 저장
 
 			if (access(errorDir, F_OK) < 0)
-				mkdir(errorDir, 0755);
+			{
+				if (mkdir(errorDir, 0755) == -1)
+				{
+					fprintf(stderr, "error: errorDir path is invalid\n");
+					exit(1);
+				}
+			}
 			else
 			{
 				rmdirs(errorDir); // 디렉토리가 이미 존재한다면 지워줌
-				mkdir(errorDir, 0755);
+				if (mkdir(errorDir, 0755) == -1)
+				{
+					fprintf(stderr, "error: errorDir path is invalid\n");
+					exit(1);
+				}
 			}
 			break;
 
@@ -207,10 +218,10 @@ int check_option(int argc, char *argv[])
 					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
 				else
 				{
-					sprintf(tmp,"%s/%s.c",ansDir,argv[i]);
-					if(access(tmp,F_OK)!=0)
+					sprintf(tmp, "%s/%s.c", ansDir, argv[i]);
+					if (access(tmp, F_OK) != 0)
 					{
-						fprintf(stderr, "error: problem %s is not exist or can't compiled\n",argv[i]);
+						fprintf(stderr, "error: problem %s is not exist or can't compiled\n", argv[i]);
 						exit(1);
 					}
 					strcpy(threadFiles[j], argv[i]); // 인자들을 순서대로 threadFiles배열에 저장
@@ -345,7 +356,7 @@ void do_mOption()
 		}
 	}
 
-	sprintf(filename, "./%s", "score_table.csv");
+	sprintf(filename, "%s/%s", ansDir,"score_table.csv");
 	write_scoreTable(filename); // 바뀐 점수를 csv파일에 다시 갱신하는 함수 호출
 	free(ptr);
 }
@@ -370,7 +381,7 @@ void set_scoreTable(char *ansDir)
 {
 	char filename[FILELEN];
 
-	sprintf(filename, "./%s", "score_table.csv");
+	sprintf(filename, "%s/%s",ansDir,"score_table.csv");
 
 	// check exist
 	if (access(filename, F_OK) == 0)
@@ -632,7 +643,14 @@ void score_students()
 		score += score_student(fd, id_table[num]);
 	}
 
-	printf("Total average : %.2f\n", score / num);
+	if(cOption)
+		printf("Total average : %.2f\n", score / num);
+	char resPath[BUFLEN];
+	char errPath[BUFLEN];
+	realpath(scoreFile,resPath);
+	printf("result saved.. (%s)\n",resPath);
+	realpath(errorDir,errPath);
+	printf("error saved.. (%s)\n",errPath);
 
 	close(fd);
 }
@@ -643,7 +661,7 @@ double score_student(int fd, char *id)
 	double result;
 	double score = 0;
 	int i;
-	char tmp[BUFLEN],tmp2[BUFLEN];
+	char tmp[BUFLEN], tmp2[BUFLEN];
 	int size = sizeof(score_table) / sizeof(score_table[0]);
 	wrongProblem *head = NULL;
 
@@ -667,9 +685,9 @@ double score_student(int fd, char *id)
 				result = score_program(id, score_table[i].qname); // c파일이면 소스코드문제 로직
 		}
 
-		if (result !=true)
+		if (result != true)
 		{
-			memset(tmp2,0,sizeof(tmp2));
+			memset(tmp2, 0, sizeof(tmp2));
 			memcpy(tmp2, score_table[i].qname, strlen(score_table[i].qname) - strlen(strrchr(score_table[i].qname, '.')));
 			push_list(&head, tmp2, score_table[i].score);
 		}
@@ -916,7 +934,7 @@ int is_thread(char *qname)
 	int i;
 	int size = sizeof(threadFiles) / sizeof(threadFiles[0]);
 
-	if(threadFiles[0][0]==0)
+	if (threadFiles[0][0] == 0)
 		return true;
 
 	for (i = 0; i < size; i++)
@@ -985,7 +1003,11 @@ double compile_program(char *id, char *filename)
 				mkdir(tmp_e, 0755);
 
 			sprintf(tmp_e, "%s/%s/%s_error.txt", errorDir, id, qname);
-			rename(tmp_f, tmp_e);
+			if (rename(tmp_f, tmp_e) == -1)
+			{
+				fprintf(stderr, "error: errorFile path is invalid\n");
+				exit(1);
+			}
 
 			result = check_error_warning(tmp_e);
 		}
@@ -1223,20 +1245,20 @@ void push_list(wrongProblem **list, char *qname, double score)
 	strcpy(new->qname, qname);
 	new->score = score;
 	new->next = NULL;
-	if(*list==NULL)
-		*list=new;
+	if (*list == NULL)
+		*list = new;
 	else
 	{
-		wrongProblem *node=*list;
-		while(node->next!=NULL)
-			node=node->next;
-		node->next=new;
+		wrongProblem *node = *list;
+		while (node->next != NULL)
+			node = node->next;
+		node->next = new;
 	}
 }
 
 void print_list(wrongProblem *head)
 {
-	if(head==NULL)
+	if (head == NULL)
 		printf("head is null");
 	while (head != NULL)
 	{

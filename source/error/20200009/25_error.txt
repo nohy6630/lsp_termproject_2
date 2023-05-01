@@ -1,0 +1,10 @@
+/home/yenoh/term_project_2/source/STD_DIR/20200009/25.c: In function ‘main’:
+/home/yenoh/term_project_2/source/STD_DIR/20200009/25.c:37:49: error: expected ‘;’ before ‘}’ token
+   37 |             printf("parent : SIGUSR1 pending\n")
+      |                                                 ^
+      |                                                 ;
+   38 | }
+      | ~                                                
+/home/yenoh/term_project_2/source/STD_DIR/20200009/25.c:38:1: error: expected declaration or statement at end of input
+   38 | }
+      | ^
