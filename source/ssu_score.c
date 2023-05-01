@@ -30,8 +30,10 @@ int mOption = false;
 int iOption = false;
 int cOption = false;
 int pOption = false;
+int sOption=false;
 
 char scoreFile[BUFLEN];
+char sOptArg[2][100];
 
 void ssu_score(int argc, char *argv[])
 {
@@ -111,13 +113,46 @@ int check_option(int argc, char *argv[])
 	int exist = 0;
 	char tmp[BUFLEN];
 
-	while ((c = getopt(argc, argv, "e:thmin:cp")) != -1) // 옵션 처리
+	while ((c = getopt(argc, argv, "e:thmin:cps")) != -1) // 옵션 처리
 	{
 		switch (c)
 		{
+		case 's':
+			sOption=true;
+			i=optind; // getopt로 읽은 인덱스의 다음 인덱스
+			j=0;
+			while(i<argc&&(argv[i][0]!='-'||!strcmp(argv[i],"-1")))
+			{		
+				if(i==optind)
+				{
+					if(!strcmp(argv[i],"stdid")||!strcmp(argv[i],"score"))
+						strcpy(sOptArg[0],argv[i]);
+					else
+					{
+						fprintf(stderr, "error: s option argument is stdid nor score\n");
+						exit(1);
+					}
+				}
+				else if(i==optind+1)
+				{
+					if(!strcmp(argv[i],"1")||!strcmp(argv[i],"-1"))
+						strcpy(sOptArg[1],argv[i]);
+					else
+					{
+						fprintf(stderr, "error: s option argument is 1 nor -1\n");
+						exit(1);
+					}
+				}
+				else
+				{
+					fprintf(stderr, "error: too many argument in s option\n");
+					exit(1);
+				}
+			}
+			break;
 		case 'p':
 			pOption = true;
-			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
+			i = optind; // getopt로 읽은 인덱스의 다음 인덱스
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
@@ -146,7 +181,7 @@ int check_option(int argc, char *argv[])
 			break;
 		case 'c':
 			cOption = true;
-			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
+			i = optind; // getopt로 읽은 인덱스의 다음 인덱스
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
@@ -208,7 +243,7 @@ int check_option(int argc, char *argv[])
 
 		case 't': // 컴파일시 -lpthread옵션 추가하는 옵션
 			tOption = true;
-			i = optind; // getopt() 함수가 처리한 커맨드 라인 옵션의 마지막 인덱스
+			i = optind;  // getopt로 읽은 인덱스의 다음 인덱스
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
@@ -624,6 +659,7 @@ void score_students()
 	int fd;
 	char tmp[BUFLEN];
 	int size = sizeof(id_table) / sizeof(id_table[0]);
+	stuScore *head=NULL;
 
 	if ((fd = creat(scoreFile, 0666)) < 0)
 	{
@@ -640,7 +676,10 @@ void score_students()
 		sprintf(tmp, "%s,", id_table[num]);
 		write(fd, tmp, strlen(tmp));
 
-		score += score_student(fd, id_table[num]);
+		stuScore *new=(stuScore*)malloc(sizeof(stuScore));
+		new->next=NULL;
+		score += score_student(fd, id_table[num],&new);//점수를 채점하면서 점수들 정보를 new노드에 저장
+		push_list_2(&head,new);
 	}
 
 	if(cOption)
@@ -652,6 +691,12 @@ void score_students()
 	realpath(errorDir,errPath);
 	printf("error saved.. (%s)\n",errPath);
 
+	if(sOption)//sOption이라면 링크드리스트를 정렬시키고 그 순서대로 다시 채점결과를 csv파일에 기록함
+	{
+		
+	}
+
+	free_list_2(head);
 	close(fd);
 }
 
@@ -1275,5 +1320,27 @@ void free_list(wrongProblem *head)
 		return;
 	if (head->next != NULL)
 		free_list(head->next);
+	free(head);
+}
+
+void push_list_2(stuScore **list, stuScore *new)
+{
+	if (*list == NULL)
+		*list = new;
+	else
+	{
+		stuScore *node = *list;
+		while (node->next != NULL)
+			node = node->next;
+		node->next = new;
+	}
+}
+
+void free_list_2(stuScore *head)
+{
+	if (head == NULL)
+		return;
+	if (head->next != NULL)
+		free_list_2(head->next);
 	free(head);
 }

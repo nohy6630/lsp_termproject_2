@@ -41,10 +41,17 @@ struct ssu_scoreTable{
 };
 
 typedef struct wrongProblem{
-	struct wrongProblem* next;
+	struct wrongProblem *next;
 	char qname[FILELEN];
 	double score;
 }wrongProblem;
+
+typedef struct stuScore{
+	struct stuScore *next;
+	char id[10];
+	double score[QNUM];
+	double sum;
+}stuScore;
 
 void ssu_score(int argc, char *argv[]);
 int check_option(int argc, char *argv[]);
@@ -87,5 +94,8 @@ void get_qname_number(char *qname, int *num1, int *num2);
 void push_list(wrongProblem **list, char *qname, double score);
 void print_list(wrongProblem* head);
 void free_list(wrongProblem* head);
+
+void push_list_2(stuScore **list, stuScore *new);
+void free_list_2(stuScore *head);
 
 #endif
