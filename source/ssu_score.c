@@ -201,13 +201,19 @@ int check_option(int argc, char *argv[])
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
-			{ // 옵션을 제외한 인자들 순회
+			{ // 다음 옵션을 만날때까지 순회
 
 				if (j >= ARGNUM) // 인자 갯수 초과
 					printf("Maximum Number of Argument Exceeded.  :: %s\n", argv[i]);
 				else
 				{
-					strcpy(threadFiles[j], argv[i]); // 옵션을 제외한 인자들을 순서대로 threadFiles배열에 저장
+					sprintf(tmp,"%s/%s.c",ansDir,argv[i]);
+					if(access(tmp,F_OK)!=0)
+					{
+						fprintf(stderr, "error: problem %s is not exist or can't compiled\n",argv[i]);
+						exit(1);
+					}
+					strcpy(threadFiles[j], argv[i]); // 인자들을 순서대로 threadFiles배열에 저장
 				}
 				i++;
 				j++;
@@ -909,6 +915,9 @@ int is_thread(char *qname)
 {
 	int i;
 	int size = sizeof(threadFiles) / sizeof(threadFiles[0]);
+
+	if(threadFiles[0][0]==0)
+		return true;
 
 	for (i = 0; i < size; i++)
 	{
