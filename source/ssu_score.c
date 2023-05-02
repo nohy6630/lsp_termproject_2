@@ -30,7 +30,7 @@ int mOption = false;
 int iOption = false;
 int cOption = false;
 int pOption = false;
-int sOption=false;
+int sOption = false;
 
 char scoreFile[BUFLEN];
 char sOptArg[2][100];
@@ -60,7 +60,7 @@ void ssu_score(int argc, char *argv[])
 	{
 		strcpy(stuDir, argv[1]); // stuDir 경로 값 할당
 		strcpy(ansDir, argv[2]); // ansDir 경로 값 할당
-		sprintf(scoreFile,"%s/score.csv",ansDir);
+		sprintf(scoreFile, "%s/score.csv", ansDir);
 	}
 
 	if (!check_option(argc, argv)) // 정의되지 않은 옵션인 경우에는 프로그램 종료시킴
@@ -113,30 +113,37 @@ int check_option(int argc, char *argv[])
 	int exist = 0;
 	char tmp[BUFLEN];
 
-	while ((c = getopt(argc, argv, "e:thmin:cps")) != -1) // 옵션 처리
+	while ((c = getopt(argc, argv, "e:thmin:cps1")) != -1) // 옵션 처리
 	{
 		switch (c)
 		{
+		case '1':
+			if(strcmp(sOptArg[1],"-1"))
+			{
+				fprintf(stderr, "error: 1 is not option. -1 is s option argument\n");
+				exit(1);
+			}
+			break;
 		case 's':
-			sOption=true;
-			i=optind; // getopt로 읽은 인덱스의 다음 인덱스
-			j=0;
-			while(i<argc&&(argv[i][0]!='-'||!strcmp(argv[i],"-1")))
-			{		
-				if(i==optind)
+			sOption = true;
+			i = optind; // getopt로 읽은 인덱스의 다음 인덱스
+			j = 0;
+			while (i < argc && (argv[i][0] != '-' || !strcmp(argv[i], "-1")))
+			{
+				if (i == optind)
 				{
-					if(!strcmp(argv[i],"stdid")||!strcmp(argv[i],"score"))
-						strcpy(sOptArg[0],argv[i]);
+					if (!strcmp(argv[i], "stdid") || !strcmp(argv[i], "score"))
+						strcpy(sOptArg[0], argv[i]);
 					else
 					{
 						fprintf(stderr, "error: s option argument is stdid nor score\n");
 						exit(1);
 					}
 				}
-				else if(i==optind+1)
+				else if (i == optind + 1)
 				{
-					if(!strcmp(argv[i],"1")||!strcmp(argv[i],"-1"))
-						strcpy(sOptArg[1],argv[i]);
+					if (!strcmp(argv[i], "1") || !strcmp(argv[i], "-1"))
+						strcpy(sOptArg[1], argv[i]);
 					else
 					{
 						fprintf(stderr, "error: s option argument is 1 nor -1\n");
@@ -148,6 +155,12 @@ int check_option(int argc, char *argv[])
 					fprintf(stderr, "error: too many argument in s option\n");
 					exit(1);
 				}
+				i++;
+			}
+			if (sOptArg[0][0] == 0 || sOptArg[1][0] == 0)
+			{
+				fprintf(stderr, "error: s option need two arguments\n");
+				exit(1);
 			}
 			break;
 		case 'p':
@@ -243,7 +256,7 @@ int check_option(int argc, char *argv[])
 
 		case 't': // 컴파일시 -lpthread옵션 추가하는 옵션
 			tOption = true;
-			i = optind;  // getopt로 읽은 인덱스의 다음 인덱스
+			i = optind; // getopt로 읽은 인덱스의 다음 인덱스
 			j = 0;
 
 			while (i < argc && argv[i][0] != '-')
@@ -391,7 +404,7 @@ void do_mOption()
 		}
 	}
 
-	sprintf(filename, "%s/%s", ansDir,"score_table.csv");
+	sprintf(filename, "%s/%s", ansDir, "score_table.csv");
 	write_scoreTable(filename); // 바뀐 점수를 csv파일에 다시 갱신하는 함수 호출
 	free(ptr);
 }
@@ -416,7 +429,7 @@ void set_scoreTable(char *ansDir)
 {
 	char filename[FILELEN];
 
-	sprintf(filename, "%s/%s",ansDir,"score_table.csv");
+	sprintf(filename, "%s/%s", ansDir, "score_table.csv");
 
 	// check exist
 	if (access(filename, F_OK) == 0)
@@ -659,7 +672,7 @@ void score_students()
 	int fd;
 	char tmp[BUFLEN];
 	int size = sizeof(id_table) / sizeof(id_table[0]);
-	stuScore *head=NULL;
+	stuScore *head = NULL;
 
 	if ((fd = creat(scoreFile, 0666)) < 0)
 	{
@@ -676,31 +689,39 @@ void score_students()
 		sprintf(tmp, "%s,", id_table[num]);
 		write(fd, tmp, strlen(tmp));
 
-		stuScore *new=(stuScore*)malloc(sizeof(stuScore));
-		new->next=NULL;
-		score += score_student(fd, id_table[num],&new);//점수를 채점하면서 점수들 정보를 new노드에 저장
-		push_list_2(&head,new);
+		stuScore *new = (stuScore *)malloc(sizeof(stuScore));
+		new->next = NULL;
+		strcpy(new->scoId, id_table[num]);
+		score += score_student(fd, id_table[num], new); // 점수를 채점하면서 점수들 정보를 new노드에 저장
+		push_list_2(&head, new);						// 링크드리스트에 학생채점정보 노드 추가
 	}
 
-	if(cOption)
+	if (cOption)
 		printf("Total average : %.2f\n", score / num);
 	char resPath[BUFLEN];
 	char errPath[BUFLEN];
-	realpath(scoreFile,resPath);
-	printf("result saved.. (%s)\n",resPath);
-	realpath(errorDir,errPath);
-	printf("error saved.. (%s)\n",errPath);
-
-	if(sOption)//sOption이라면 링크드리스트를 정렬시키고 그 순서대로 다시 채점결과를 csv파일에 기록함
+	realpath(scoreFile, resPath);
+	printf("result saved.. (%s)\n", resPath);
+	if (eOption)
 	{
-		
+		realpath(errorDir, errPath);
+		printf("error saved.. (%s)\n", errPath);
 	}
 
-	free_list_2(head);
+	if (sOption) // sOption이라면 링크드리스트를 정렬시키고 그 순서대로 다시 채점결과를 csv파일에 기록함
+	{
+		sort_list(head);
+		lseek(fd, 0, SEEK_SET);
+		ftruncate(fd,0);
+		write_first_row(fd);
+		write_sort_res(fd, head);
+	}
+
+	free_list_2(head); // 링크드리스트 메모리 해제
 	close(fd);
 }
 
-double score_student(int fd, char *id)
+double score_student(int fd, char *id, stuScore *node)
 {
 	int type;
 	double result;
@@ -738,17 +759,22 @@ double score_student(int fd, char *id)
 		}
 
 		if (result == false)
+		{
 			write(fd, "0,", 2);
+			node->sco[i] = 0;
+		}
 		else
 		{
 			if (result == true)
 			{
 				score += score_table[i].score;
+				node->sco[i] = score_table[i].score;
 				sprintf(tmp, "%.2f,", score_table[i].score);
 			}
 			else if (result < 0)
 			{
 				score = score + score_table[i].score + result; // result는 감점 점수인듯
+				node->sco[i] = score_table[i].score + result;
 				sprintf(tmp, "%.2f,", score_table[i].score + result);
 			}
 			write(fd, tmp, strlen(tmp));
@@ -798,6 +824,7 @@ double score_student(int fd, char *id)
 	printf("\n");
 
 	sprintf(tmp, "%.2f\n", score); // 다음 행으로 전환
+	node->scoSum = score;
 	write(fd, tmp, strlen(tmp));
 
 	return score;
@@ -1343,4 +1370,83 @@ void free_list_2(stuScore *head)
 	if (head->next != NULL)
 		free_list_2(head->next);
 	free(head);
+}
+
+void swap_node(stuScore *a, stuScore *b)
+{
+	stuScore tmp;
+	
+	tmp = *a;
+	*a=*b;
+	a->next=tmp.next;//next값은 swap이 되지 않고 그대로
+	tmp.next=b->next;//next값은 swap이 되지 않고 그대로
+	*b = tmp;
+}
+
+void sort_list(stuScore *head)
+{
+	int cnt = 0;
+	while (score_table[cnt].score != 0)
+		cnt++;
+	for (int i = 0; i < cnt-1; i++)
+	{
+		stuScore *cur = head;
+		while (cur!=NULL&&cur->next != NULL)
+		{
+			if (!strcmp(sOptArg[0], "stdid"))
+			{
+				if (!strcmp(sOptArg[1], "1"))
+				{
+					if (strcmp(cur->scoId, cur->next->scoId) > 0)
+						swap_node(cur, cur->next);
+				}
+				else
+				{
+					if (strcmp(cur->scoId, cur->next->scoId) < 0)
+						swap_node(cur, cur->next);
+				}
+			}
+			else
+			{
+				if (!strcmp(sOptArg[1], "1"))
+				{
+					if (cur->scoSum > cur->next->scoSum)
+						swap_node(cur, cur->next);
+				}
+				else
+				{
+					if (cur->scoSum < cur->next->scoSum)
+						swap_node(cur, cur->next);
+				}
+			}
+			cur = cur->next;
+		}
+	}
+}
+
+void write_sort_res(int fd, stuScore *head)
+{
+	int cnt = 0;
+	char tmp[BUFLEN];
+	stuScore *cur = head;
+	while (score_table[cnt].score != 0)
+		cnt++;
+	while (cur != NULL)
+	{
+		sprintf(tmp, "%s,", cur->scoId);
+		write(fd, tmp, strlen(tmp));
+		for (int i = 0; i < cnt; i++)
+		{
+			if (cur->sco[i] == 0)
+				write(fd, "0,", 2);
+			else
+			{
+				sprintf(tmp, "%.2f,", cur->sco[i]);
+				write(fd, tmp, strlen(tmp));
+			}
+		}
+		sprintf(tmp, "%.2f\n", cur->scoSum);
+		write(fd, tmp, strlen(tmp));
+		cur = cur->next;
+	}
 }

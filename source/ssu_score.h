@@ -48,9 +48,9 @@ typedef struct wrongProblem{
 
 typedef struct stuScore{
 	struct stuScore *next;
-	char id[10];
-	double score[QNUM];
-	double sum;
+	char scoId[10];
+	double sco[QNUM];
+	double scoSum;
 }stuScore;
 
 void ssu_score(int argc, char *argv[]);
@@ -58,7 +58,7 @@ int check_option(int argc, char *argv[]);
 void print_usage();
 
 void score_students();
-double score_student(int fd, char *id);
+double score_student(int fd, char *id, stuScore *node);
 void write_first_row(int fd);
 
 char *get_answer(int fd, char *result);
@@ -97,5 +97,8 @@ void free_list(wrongProblem* head);
 
 void push_list_2(stuScore **list, stuScore *new);
 void free_list_2(stuScore *head);
+void swap_node(stuScore *a, stuScore *b);
+void sort_list(stuScore *head);
+void write_sort_res(int fd, stuScore* head);
 
 #endif

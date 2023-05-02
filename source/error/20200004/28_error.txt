@@ -1,3 +1,0 @@
-/usr/bin/ld: /tmp/ccQDR2tk.o: in function `main':
-28.c:(.text+0x9d): undefined reference to `ssu_func'
-collect2: error: ld returned 1 exit status
