@@ -1372,7 +1372,7 @@ void free_list_2(stuScore *head)
 	free(head);
 }
 
-void swap_node(stuScore *a, stuScore *b)
+void swap_node(stuScore *a, stuScore *b)//링크드리스트 안 두 노드의 데이터를 스왑하는 함수
 {
 	stuScore tmp;
 	
@@ -1386,34 +1386,34 @@ void swap_node(stuScore *a, stuScore *b)
 void sort_list(stuScore *head)
 {
 	int cnt = 0;
-	while (score_table[cnt].score != 0)
+	while (score_table[cnt].score != 0)//총 문제 갯수 구하기
 		cnt++;
-	for (int i = 0; i < cnt-1; i++)
+	for (int i = 0; i < cnt-1; i++)//버블정렬이기에 n-1번 반복하여 리스트를 순회
 	{
 		stuScore *cur = head;
 		while (cur!=NULL&&cur->next != NULL)
 		{
-			if (!strcmp(sOptArg[0], "stdid"))
+			if (!strcmp(sOptArg[0], "stdid"))//학번을 기준으로 정렬
 			{
-				if (!strcmp(sOptArg[1], "1"))
+				if (!strcmp(sOptArg[1], "1"))//오름차순 정렬
 				{
 					if (strcmp(cur->scoId, cur->next->scoId) > 0)
 						swap_node(cur, cur->next);
 				}
-				else
+				else//내림차순 정렬
 				{
 					if (strcmp(cur->scoId, cur->next->scoId) < 0)
 						swap_node(cur, cur->next);
 				}
 			}
-			else
+			else//총점수를 기준으로 정렬
 			{
-				if (!strcmp(sOptArg[1], "1"))
+				if (!strcmp(sOptArg[1], "1"))//오름차순 정렬
 				{
 					if (cur->scoSum > cur->next->scoSum)
 						swap_node(cur, cur->next);
 				}
-				else
+				else//내림차순 정렬
 				{
 					if (cur->scoSum < cur->next->scoSum)
 						swap_node(cur, cur->next);
@@ -1429,23 +1429,23 @@ void write_sort_res(int fd, stuScore *head)
 	int cnt = 0;
 	char tmp[BUFLEN];
 	stuScore *cur = head;
-	while (score_table[cnt].score != 0)
+	while (score_table[cnt].score != 0)//문제의 총갯수 구하기
 		cnt++;
-	while (cur != NULL)
+	while (cur != NULL)//정렬된 링크드리스트를 순회하면서 각 행에 학생들의 정보를 출력
 	{
 		sprintf(tmp, "%s,", cur->scoId);
 		write(fd, tmp, strlen(tmp));
 		for (int i = 0; i < cnt; i++)
 		{
 			if (cur->sco[i] == 0)
-				write(fd, "0,", 2);
+				write(fd, "0,", 2);//0점이라면 그냥 0 출력
 			else
 			{
 				sprintf(tmp, "%.2f,", cur->sco[i]);
-				write(fd, tmp, strlen(tmp));
+				write(fd, tmp, strlen(tmp));//0점이 아니라면 그 점수를 형식에 맞게 출력
 			}
 		}
-		sprintf(tmp, "%.2f\n", cur->scoSum);
+		sprintf(tmp, "%.2f\n", cur->scoSum);//총합 출력후 개행
 		write(fd, tmp, strlen(tmp));
 		cur = cur->next;
 	}

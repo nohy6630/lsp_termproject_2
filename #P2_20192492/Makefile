@@ -5,7 +5,7 @@ BLANK = blank
 MAIN = main
 
 $(SCORE) : $(SCORE).o $(BLANK).o $(MAIN).o
-	$(CC) -w -o $(SCORE) $(SCORE).o $(BLANK).o $(MAIN).o 
+	$(CC) -o $(SCORE) $(SCORE).o $(BLANK).o $(MAIN).o 
 
 $(SCORE).o : $(SCORE).h $(BLANK).h
 	$(CC) -w -c -o $@ $(SCORE).c
